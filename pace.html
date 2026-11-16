@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pace — løbeberegner</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101411;
+      --panel: rgba(27, 34, 29, .88);
+      --panel-light: #222b24;
+      --text: #f4f7f1;
+      --muted: #a5b0a5;
+      --accent: #c5fa78;
+      --accent-dark: #8dc943;
+      --line: rgba(255, 255, 255, .09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 36px 18px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 18% 12%, rgba(137, 194, 78, .14), transparent 35%),
+        radial-gradient(ellipse at 90% 85%, rgba(73, 133, 91, .13), transparent 32%),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      width: min(100%, 520px);
+      animation: appear .55s ease both;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    header { margin-bottom: 24px; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 26px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(197, 250, 120, .25);
+      border-radius: 12px;
+      background: rgba(197, 250, 120, .09);
+      font-size: 17px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(30px, 8vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+      backdrop-filter: blur(16px);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      padding: 5px;
+      margin-bottom: 25px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0, 0, 0, .2);
+    }
+
+    .tab {
+      min-height: 43px;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, color .2s, transform .2s;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab:active { transform: scale(.98); }
+
+    .tab.active {
+      color: #17200f;
+      background: var(--accent);
+      box-shadow: 0 3px 12px rgba(197, 250, 120, .16);
+    }
+
+    .field { margin-bottom: 21px; }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 9px;
+      color: #e7ece5;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 450;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      height: 54px;
+      padding: 0 15px;
+      outline: none;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      color: var(--text);
+      background: var(--panel-light);
+      font: inherit;
+      font-size: 19px;
+      font-weight: 650;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input:focus {
+      border-color: rgba(197, 250, 120, .7);
+      box-shadow: 0 0 0 3px rgba(197, 250, 120, .1);
+    }
+
+    input::placeholder { color: #778177; }
+
+    .unit {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .triple {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 9px;
+    }
+
+    .time-input-wrap { position: relative; }
+
+    .time-input-wrap input { padding-right: 36px; }
+
+    .time-input-wrap span {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -5px 0 21px;
+    }
+
+    .preset {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .preset:hover {
+      border-color: rgba(197, 250, 120, .5);
+      color: var(--accent);
+    }
+
+    .result {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      border: 1px solid rgba(197, 250, 120, .2);
+      border-radius: 17px;
+      background: linear-gradient(135deg, rgba(197, 250, 120, .12), rgba(197, 250, 120, .035));
+    }
+
+    .result::after {
+      content: "↗";
+      position: absolute;
+      top: -23px;
+      right: 12px;
+      color: rgba(197, 250, 120, .1);
+      font-size: 100px;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .result-label {
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .result-value {
+      color: var(--accent);
+      font-size: clamp(34px, 10vw, 48px);
+      font-weight: 780;
+      letter-spacing: -.05em;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-note {
+      margin-top: 7px;
+      color: #d2dbd0;
+      font-size: 13px;
+    }
+
+    .error {
+      min-height: 18px;
+      margin: 10px 2px 0;
+      color: #ff9a8e;
+      font-size: 12px;
+    }
+
+    footer {
+      margin-top: 17px;
+      color: #849084;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 430px) {
+      .card { padding: 18px; border-radius: 20px; }
+      .tab { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand"><span class="brand-mark">↗</span> Pace</div>
+      <h1>Dit løb.<br>Dit tempo.</h1>
+      <p class="intro">Regn nemt mellem pace og sluttid — så er du klar til næste tur.</p>
+    </header>
+
+    <section class="card" aria-label="Løbeberegner">
+      <div class="tabs" role="tablist" aria-label="Vælg beregning">
+        <button class="tab active" id="paceTab" role="tab" aria-selected="true">Pace → tid</button>
+        <button class="tab" id="timeTab" role="tab" aria-selected="false">Tid → pace</button>
+      </div>
+
+      <div id="paceMode">
+        <div class="field">
+          <label class="field-label" for="paceDistance">
+            Distance <span class="hint">i kilometer</span>
+          </label>
+          <div class="input-row">
+            <input id="paceDistance" type="number" min="0.01" step="0.01" value="5" inputmode="decimal">
+            <span class="unit">km</span>
+          </div>
+        </div>
+
+        <div class="presets" aria-label="Vælg distance">
+          <button class="preset" data-distance="5">5 km</button>
+          <button class="preset" data-distance="10">10 km</button>
+          <button class="preset" data-distance="21.0975">Halvmaraton</button>
+          <button class="preset" data-distance="42.195">Maraton</button>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Pace <span class="hint">minutter pr. kilometer</span></div>
+          <div class="triple" style="grid-template-columns: 1fr 1fr;">
+            <div class="time-input-wrap">
+              <input id="paceMin" type="number" min="0" step="1" value="5" aria-label="Pace minutter" inputmode="numeric">
+              <span>min</span>
+            </div>
+            <div class="time-input-wrap">
+              <input id="paceSec" type="number" min="0" max="59" step="1" value="30" aria-label="Pace sekunder" inputmode="numeric">
+              <span>sek</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result" aria-live="polite">
+          <div class="result-label">Forventet sluttid</div>
+          <div class="result-value" id="finishResult">27:30</div>
+          <div class="result-note" id="finishNote">på 5 km</div>
+        </div>
+      </div>
+
+      <div id="timeMode" hidden>
+        <div class="field">
+          <label class="field-label" for="timeDistance">
+            Distance <span class="hint">i kilometer</span>
+          </label>
+          <div class="input-row">
+            <input id="timeDistance" type="number" min="0.01" step="0.01" value="5" inputmode="decimal">
+            <span class="unit">km</span>
+          </div>
+        </div>
+
+        <div class="presets" aria-label="Vælg distance">
+          <button class="preset" data-distance="5">5 km</button>
+          <button class="preset" data-distance="10">10 km</button>
+          <button class="preset" data-distance="21.0975">Halvmaraton</button>
+          <button class="preset" data-distance="42.195">Maraton</button>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Sluttid <span class="hint">timer, minutter og sekunder</span></div>
+          <div class="triple">
+            <div class="time-input-wrap">
+              <input id="timeHours" type="number" min="0" step="1" value="0" aria-label="Timer" inputmode="numeric">
+              <span>t</span>
+            </div>
+            <div class="time-input-wrap">
+              <input id="timeMinutes" type="number" min="0" max="59" step="1" value="27" aria-label="Minutter" inputmode="numeric">
+              <span>min</span>
+            </div>
+            <div class="time-input-wrap">
+              <input id="timeSeconds" type="number" min="0" max="59" step="1" value="30" aria-label="Sekunder" inputmode="numeric">
+              <span>sek</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result" aria-live="polite">
+          <div class="result-label">Dit pace</div>
+          <div class="result-value" id="paceResult">5:30</div>
+          <div class="result-note">minutter pr. kilometer</div>
+        </div>
+      </div>
+
+      <div class="error" id="error" role="status"></div>
+    </section>
+
+    <footer>Små skridt. Stærke kilometer.</footer>
+  </main>
+
+  <script>
+    const paceTab = document.getElementById("paceTab");
+    const timeTab = document.getElementById("timeTab");
+    const paceMode = document.getElementById("paceMode");
+    const timeMode = document.getElementById("timeMode");
+    const error = document.getElementById("error");
+
+    function formatTime(totalSeconds) {
+      const rounded = Math.round(totalSeconds);
+      const hours = Math.floor(rounded / 3600);
+      const minutes = Math.floor((rounded % 3600) / 60);
+      const seconds = rounded % 60;
+      const pad = n => String(n).padStart(2, "0");
+
+      return hours > 0
+        ? `${hours}:${pad(minutes)}:${pad(seconds)}`
+        : `${minutes}:${pad(seconds)}`;
+    }
+
+    function formatPace(totalSeconds) {
+      const rounded = Math.round(totalSeconds);
+      const minutes = Math.floor(rounded / 60);
+      const seconds = rounded % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function showError(message) {
+      error.textContent = message;
+    }
+
+    function updatePaceToTime() {
+      const distance = Number(document.getElementById("paceDistance").value);
+      const minutes = Number(document.getElementById("paceMin").value);
+      const seconds = Number(document.getElementById("paceSec").value);
+
+      if (!Number.isFinite(distance) || distance <= 0) {
+        showError("Indtast en distance større end 0 km.");
+        return;
+      }
+      if (seconds < 0 || seconds > 59 || minutes < 0) {
+        showError("Pace skal have 0–59 sekunder og mindst 0 minutter.");
+        return;
+      }
+
+      showError("");
+      const totalSeconds = distance * (minutes * 60 + seconds);
+      document.getElementById("finishResult").textContent = formatTime(totalSeconds);
+      document.getElementById("finishNote").textContent =
+        `på ${Number(distance.toFixed(2))} km`;
+    }
+
+    function updateTimeToPace() {
+      const distance = Number(document.getElementById("timeDistance").value);
+      const hours = Number(document.getElementById("timeHours").value);
+      const minutes = Number(document.getElementById("timeMinutes").value);
+      const seconds = Number(document.getElementById("timeSeconds").value);
+
+      if (!Number.isFinite(distance) || distance <= 0) {
+        showError("Indtast en distance større end 0 km.");
+        return;
+      }
+      if (hours < 0 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+        showError("Minutter og sekunder skal være mellem 0 og 59.");
+        return;
+      }
+
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+      if (totalSeconds <= 0) {
+        showError("Indtast en sluttid større end 0.");
+        return;
+      }
+
+      showError("");
+      document.getElementById("paceResult").textContent =
+        formatPace(totalSeconds / distance);
+    }
+
+    function setMode(mode) {
+      const isPaceMode = mode === "pace";
+      paceMode.hidden = !isPaceMode;
+      timeMode.hidden = isPaceMode;
+      paceTab.classList.toggle("active", isPaceMode);
+      timeTab.classList.toggle("active", !isPaceMode);
+      paceTab.setAttribute("aria-selected", String(isPaceMode));
+      timeTab.setAttribute("aria-selected", String(!isPaceMode));
+      showError("");
+      isPaceMode ? updatePaceToTime() : updateTimeToPace();
+    }
+
+    paceTab.addEventListener("click", () => setMode("pace"));
+    timeTab.addEventListener("click", () => setMode("time"));
+
+    document.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", () => {
+        if (!paceMode.hidden) updatePaceToTime();
+        else updateTimeToPace();
+      });
+    });
+
+    document.querySelectorAll(".preset").forEach(button => {
+      button.addEventListener("click", () => {
+        const distance = button.dataset.distance;
+        document.getElementById("paceDistance").value = distance;
+        document.getElementById("timeDistance").value = distance;
+        if (!paceMode.hidden) updatePaceToTime();
+        else updateTimeToPace();
+      });
+    });
+
+    updatePaceToTime();
+  </script>
+</body>
+</html
